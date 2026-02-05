@@ -20,7 +20,7 @@
     <header>
         <div class="header-left">
             <h1><i class="fas fa-crosshairs"></i> ISLAMABAD EMERGENCY COMMAND CENTER</h1>
-            <p class="subtitle">Real-time Disaster Response System | Version 1.0</p>
+            <p class="subtitle">Real-time Disaster Response System | Version 2.0 | Live Data Integrated</p>
         </div>
         <div class="header-right">
             <div class="live-indicator">
@@ -70,10 +70,24 @@
                 </div>
             </div>
 
-            <!-- Weather Widget -->
+            <!-- Real Weather Data -->
             <div class="control-section" id="weatherSection">
-                <h3><i class="fas fa-cloud-sun"></i> Islamabad Weather</h3>
-                <div id="weatherData">Loading weather...</div>
+                <h3><i class="fas fa-cloud-sun"></i> ISLAMABAD WEATHER (LIVE)</h3>
+                <div id="weatherData" class="weather-widget">
+                    <div class="weather-loading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading real weather data...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real Traffic Data -->
+            <div class="control-section" id="trafficSection">
+                <h3><i class="fas fa-car"></i> TRAFFIC STATUS</h3>
+                <div id="trafficData" class="traffic-widget">
+                    <div class="traffic-loading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading traffic data...
+                    </div>
+                </div>
             </div>
 
             <div class="control-section">
@@ -114,11 +128,35 @@
                 <div class="legend-item"><span class="legend-color critical"></span> Critical</div>
             </div>
 
-            <!-- Citizen Reports -->
+            <!-- Citizen Reports Form -->
             <div class="control-section">
-                <h3><i class="fas fa-users"></i> Citizen Reports</h3>
+                <h3><i class="fas fa-users"></i> CITIZEN REPORTING</h3>
+                <div class="citizen-report-form">
+                    <p><strong>Report Real Emergency:</strong></p>
+                    <div class="form-group">
+                        <select id="emergencyType" class="form-select">
+                            <option value="">Select Emergency Type</option>
+                            <option value="fire">Fire</option>
+                            <option value="accident">Accident</option>
+                            <option value="medical">Medical Emergency</option>
+                            <option value="flood">Flood</option>
+                            <option value="crime">Crime</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="location" class="form-input" placeholder="Location (e.g., G-9/4, F-7 Markaz)">
+                    </div>
+                    <div class="form-group">
+                        <textarea id="description" class="form-textarea" placeholder="Description (optional)" rows="2"></textarea>
+                    </div>
+                    <button class="btn btn-report" onclick="submitCitizenReport()">
+                        <i class="fas fa-paper-plane"></i> Submit Report
+                    </button>
+                    <p class="form-note">Reports are stored and processed in real database</p>
+                </div>
+                
                 <div id="citizenReports" class="log-container">
-                    <div class="log-entry">Waiting for citizen reports...</div>
+                    <div class="log-entry">No citizen reports yet. Be the first to report!</div>
                 </div>
             </div>
         </div>
@@ -170,9 +208,14 @@
                 <div class="log-container" id="eventLog">
                     <!-- Log entries added here -->
                 </div>
-                <button class="btn btn-export" onclick="exportLogs()">
-                    <i class="fas fa-download"></i> Export Logs for Presentation
-                </button>
+                <div class="export-buttons">
+                    <button class="btn btn-export" onclick="exportLogs()">
+                        <i class="fas fa-download"></i> Export Logs
+                    </button>
+                    <button class="btn btn-presentation" onclick="generatePresentation()">
+                        <i class="fas fa-file-powerpoint"></i> Generate Presentation
+                    </button>
+                </div>
             </div>
         </div>
     </main>
@@ -180,15 +223,17 @@
     <!-- Footer -->
     <footer>
         <div class="footer-left">
-            <p><i class="fas fa-user"></i> <strong>Project Lead:</strong>Ibrar_techs</p>
-            <p><i class="fas fa-phone"></i> <strong>Emergency Contact:</strong> 1122</p>
+            <p><i class="fas fa-user"></i> <strong>Project Lead:</strong> Ibrar Hussain</p>
+            <p><i class="fas fa-phone"></i> <strong>Emergency Contact:</strong> 1122 | 15</p>
+            <p><i class="fas fa-globe"></i> <strong>Live System:</strong> Version 2.0 with Real Data</p>
         </div>
         <div class="footer-center">
-            <p>This is a prototype for demonstrating emergency response coordination in Islamabad</p>
+            <p>This system integrates real-time weather, citizen reporting, and emergency coordination for Islamabad</p>
+            <p class="tech-info">Built with HTML5, CSS3, JavaScript | APIs: Open-Meteo, Firebase, Twilio</p>
         </div>
         <div class="footer-right">
-            <button class="btn btn-presentation" onclick="generatePresentation()">
-                <i class="fas fa-file-powerpoint"></i> Generate Presentation
+            <button class="btn btn-donate" onclick="showDonateInfo()">
+                <i class="fas fa-hand-holding-heart"></i> Support Project
             </button>
         </div>
     </footer>
@@ -196,7 +241,7 @@
     <!-- Government Badge -->
     <div class="government-badge">
         <i class="fas fa-shield-alt"></i> 
-        OFFICIAL PROTOTYPE - ISLAMABAD SMART CITY INITIATIVE
+        OFFICIAL PROTOTYPE - ISLAMABAD SMART CITY INITIATIVE | BY IBRAR HUSSAIN
     </div>
 
     <!-- Audio for alerts -->
