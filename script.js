@@ -44,8 +44,9 @@ function initSystem() {
     // Add initial log entry
     addLogEntry("🚀 System initialized with real data integrations.", "system");
     addLogEntry("✅ Connected to Open-Meteo Weather API for live weather data.", "system");
-    addLogEntry("📡 Real citizen reporting system activated.", "system");
+    addLogEntry("📡 Manual citizen reporting system activated.", "system");
     addLogEntry("👨‍💻 Project Lead: Ibrar Hussain", "system");
+    addLogEntry("⚠️ Auto-reports disabled. Manual control only.", "system");
     
     // Update statistics every 5 seconds
     setInterval(updateStatistics, 5000);
@@ -175,7 +176,7 @@ function updateTrafficData() {
 }
 
 // ====================
-// REAL CITIZEN REPORTING SYSTEM
+// REAL CITIZEN REPORTING SYSTEM (MANUAL ONLY)
 // ====================
 
 function submitCitizenReport() {
@@ -195,7 +196,7 @@ function submitCitizenReport() {
         description: description,
         timestamp: new Date().toISOString(),
         status: 'reported',
-        phone: 'N/A' // Would be from user profile in real app
+        phone: 'N/A'
     };
     
     // Save to database (localStorage for demo)
@@ -220,6 +221,32 @@ function submitCitizenReport() {
     document.getElementById('description').value = '';
     
     showAlert(`✅ Thank you! Report #${report.id} submitted. Help is on the way.`);
+}
+
+function generateTestReport() {
+    const types = ['fire', 'accident', 'medical', 'flood', 'crime'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    const sector = islamabadSectors[Math.floor(Math.random() * islamabadSectors.length)];
+    const location = `${sector}/${Math.floor(Math.random() * 9) + 1}`;
+    
+    const report = {
+        id: Date.now(),
+        type: type,
+        location: location,
+        description: `Test report for demonstration purposes`,
+        timestamp: new Date().toISOString(),
+        status: 'test',
+        phone: 'Test Mode'
+    };
+    
+    saveReportToDB(report);
+    displayCitizenReport(report);
+    
+    // Update sector status
+    updateSectorStatus(sector, 'alert');
+    addLogEntry(`🧪 Test report generated: ${getEmergencyName(type)} in ${location}`, 'test');
+    
+    showAlert(`🧪 Test report #${report.id} generated for demonstration`);
 }
 
 function saveReportToDB(report) {
@@ -254,7 +281,7 @@ function displayCitizenReport(report) {
         Location: ${report.location}<br>
         Time: ${new Date(report.timestamp).toLocaleTimeString()}<br>
         ${report.description ? `Details: ${report.description}<br>` : ''}
-        Status: <span class="agency-status online">ACTIVE</span>
+        Status: <span class="agency-status online">${report.status === 'test' ? 'TEST' : 'ACTIVE'}</span>
     `;
     
     container.prepend(reportDiv);
@@ -267,7 +294,6 @@ function displayCitizenReport(report) {
 }
 
 function extractSectorFromLocation(location) {
-    // Extract sector from location string (e.g., "G-9/4" -> "G-9")
     const sectorMatch = location.match(/([A-Z]-\d+)/);
     return sectorMatch ? sectorMatch[1] : null;
 }
@@ -411,13 +437,6 @@ function simulateEmergency(type) {
             dispatchAgency('Hospital');
         }, 2000);
     }
-}
-
-// Simulate Random Emergency
-function simulateRandomEmergency() {
-    const types = ['earthquake', 'fire', 'flood', 'medical'];
-    const randomType = types[Math.floor(Math.random() * types.length)];
-    simulateEmergency(randomType);
 }
 
 // Update Sector Status
@@ -683,7 +702,7 @@ function generatePresentation() {
         },
         realData: {
             weather: systemState.realWeatherData ? "✓ Live weather integrated" : "✗ Weather offline",
-            citizenReporting: "✓ Real reporting system active",
+            citizenReporting: "✓ Manual reporting system active",
             dataStorage: "✓ Local database active",
             smsIntegration: "Ready for Twilio API",
             governmentAPIs: "Ready for integration"
@@ -692,7 +711,7 @@ function generatePresentation() {
             "Real-time sector monitoring across Islamabad",
             "Multi-agency coordination (Rescue 1122, CDA, Police, Hospitals)",
             "Live weather data integration",
-            "Citizen reporting system with local database",
+            "Manual citizen reporting system with local database",
             "Mass SMS alert system (Twilio ready)",
             "Automatic government notification",
             "Live event logging and reporting"
@@ -781,40 +800,14 @@ This system has the potential to save hundreds of lives annually and establish I
     addLogEntry('Complete presentation document generated for authorities', 'presentation');
 }
 
-// Start Simulation
+// Start Simulation (NO AUTO-REPORTS)
 function startSimulation() {
     // Initial emergencies for demo
     setTimeout(() => simulateEmergency('medical'), 3000);
     setTimeout(() => simulateEmergency('fire'), 8000);
-    setTimeout(() => simulateRandomEmergency(), 15000);
     
-    // Generate citizen reports
-    setInterval(() => {
-        if (Math.random() > 0.7) {
-            generateAutoCitizenReport();
-        }
-    }, 30000);
-}
-
-function generateAutoCitizenReport() {
-    const types = ['fire', 'accident', 'medical', 'flood', 'crime'];
-    const type = types[Math.floor(Math.random() * types.length)];
-    const sector = islamabadSectors[Math.floor(Math.random() * islamabadSectors.length)];
-    const location = `${sector}/${Math.floor(Math.random() * 9) + 1}`;
-    
-    const report = {
-        id: Date.now(),
-        type: type,
-        location: location,
-        description: `Auto-generated test report for ${getEmergencyName(type)}`,
-        timestamp: new Date().toISOString(),
-        status: 'reported',
-        phone: 'Auto-generated'
-    };
-    
-    saveReportToDB(report);
-    displayCitizenReport(report);
-    addLogEntry(`🤖 Auto-test: ${getEmergencyName(type)} reported in ${location}`, 'test');
+    // NO AUTO-REPORTS - Manual control only
+    // If you want to add auto-reports later, add them here manually
 }
 
 function showDonateInfo() {
