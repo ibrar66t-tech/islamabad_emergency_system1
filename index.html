@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚨 Islamabad Emergency Response System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="https://img.icons8.com/color/96/000000/pakistan.png">
+</head>
+<body>
+    <!-- Alert Banner -->
+    <div class="alert-banner" id="alertBanner">
+        <span id="alertText">System Initialized. Monitoring Islamabad...</span>
+        <button onclick="dismissAlert()">×</button>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <div class="header-left">
+            <h1><i class="fas fa-crosshairs"></i> ISLAMABAD EMERGENCY COMMAND CENTER</h1>
+            <p class="subtitle">Real-time Disaster Response System | Version 1.0</p>
+        </div>
+        <div class="header-right">
+            <div class="live-indicator">
+                <div class="pulse"></div>
+                <span>LIVE</span>
+            </div>
+            <div class="time-display" id="timeDisplay">--:--:--</div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Left Panel: Emergency Controls -->
+        <div class="panel left-panel">
+            <h2><i class="fas fa-cogs"></i> CONTROL PANEL</h2>
+            
+            <div class="control-section">
+                <h3><i class="fas fa-bullhorn"></i> Emergency Generator</h3>
+                <div class="button-group">
+                    <button class="btn btn-earthquake" onclick="simulateEmergency('earthquake')">
+                        <i class="fas fa-mountain"></i> Simulate Earthquake
+                    </button>
+                    <button class="btn btn-fire" onclick="simulateEmergency('fire')">
+                        <i class="fas fa-fire"></i> Simulate Building Fire
+                    </button>
+                    <button class="btn btn-flood" onclick="simulateEmergency('flood')">
+                        <i class="fas fa-water"></i> Simulate Flood
+                    </button>
+                    <button class="btn btn-medical" onclick="simulateEmergency('medical')">
+                        <i class="fas fa-ambulance"></i> Medical Emergency
+                    </button>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3><i class="fas fa-broadcast-tower"></i> Alert System</h3>
+                <div class="alert-controls">
+                    <button class="btn btn-alert" onclick="sendMassAlert()">
+                        <i class="fas fa-sms"></i> Send SMS Alert
+                    </button>
+                    <button class="btn btn-notify" onclick="notifyAuthorities()">
+                        <i class="fas fa-user-tie"></i> Notify Authorities
+                    </button>
+                </div>
+                <div class="alert-stats">
+                    <p>Alerts Sent Today: <span id="alertCount">0</span></p>
+                    <p>Response Time: <span id="responseTime">--</span> minutes</p>
+                </div>
+            </div>
+
+            <!-- Weather Widget -->
+            <div class="control-section" id="weatherSection">
+                <h3><i class="fas fa-cloud-sun"></i> Islamabad Weather</h3>
+                <div id="weatherData">Loading weather...</div>
+            </div>
+
+            <div class="control-section">
+                <h3><i class="fas fa-chart-line"></i> Statistics</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalEmergencies">0</div>
+                        <div class="stat-label">Active Emergencies</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="resourcesDeployed">0</div>
+                        <div class="stat-label">Resources Deployed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="sectorsAffected">0</div>
+                        <div class="stat-label">Sectors Affected</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="responseRate">0%</div>
+                        <div class="stat-label">Response Rate</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center Panel: Islamabad Map -->
+        <div class="panel center-panel">
+            <h2><i class="fas fa-map-marked-alt"></i> ISLAMABAD SECTOR MAP</h2>
+            <div class="map-container">
+                <div class="map-grid" id="sectorMap">
+                    <!-- Sectors generated by JavaScript -->
+                </div>
+            </div>
+            <div class="legend">
+                <div class="legend-item"><span class="legend-color normal"></span> Normal</div>
+                <div class="legend-item"><span class="legend-color alert"></span> Alert</div>
+                <div class="legend-item"><span class="legend-color emergency"></span> Emergency</div>
+                <div class="legend-item"><span class="legend-color critical"></span> Critical</div>
+            </div>
+
+            <!-- Citizen Reports -->
+            <div class="control-section">
+                <h3><i class="fas fa-users"></i> Citizen Reports</h3>
+                <div id="citizenReports" class="log-container">
+                    <div class="log-entry">Waiting for citizen reports...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Agency Coordination -->
+        <div class="panel right-panel">
+            <h2><i class="fas fa-users-cog"></i> AGENCY COORDINATION</h2>
+            
+            <div class="agency-list">
+                <div class="agency-card" id="rescue1122">
+                    <div class="agency-header">
+                        <h3><i class="fas fa-truck-medical"></i> Rescue 1122</h3>
+                        <span class="agency-status online">ONLINE</span>
+                    </div>
+                    <p>Units Available: <span id="rescueUnits">12</span></p>
+                    <button class="btn btn-dispatch" onclick="dispatchAgency('Rescue 1122')">Dispatch Unit</button>
+                </div>
+
+                <div class="agency-card" id="cda">
+                    <div class="agency-header">
+                        <h3><i class="fas fa-city"></i> CDA</h3>
+                        <span class="agency-status online">ONLINE</span>
+                    </div>
+                    <p>Teams Available: <span id="cdaTeams">8</span></p>
+                    <button class="btn btn-dispatch" onclick="dispatchAgency('CDA')">Dispatch Team</button>
+                </div>
+
+                <div class="agency-card" id="police">
+                    <div class="agency-header">
+                        <h3><i class="fas fa-shield-alt"></i> Islamabad Police</h3>
+                        <span class="agency-status online">ONLINE</span>
+                    </div>
+                    <p>Patrols Available: <span id="policePatrols">15</span></p>
+                    <button class="btn btn-dispatch" onclick="dispatchAgency('Police')">Dispatch Patrol</button>
+                </div>
+
+                <div class="agency-card" id="hospital">
+                    <div class="agency-header">
+                        <h3><i class="fas fa-hospital"></i> PIMS Hospital</h3>
+                        <span class="agency-status online">ONLINE</span>
+                    </div>
+                    <p>Ambulances: <span id="ambulances">7</span></p>
+                    <button class="btn btn-dispatch" onclick="dispatchAgency('Hospital')">Dispatch Ambulance</button>
+                </div>
+            </div>
+
+            <div class="log-section">
+                <h3><i class="fas fa-clipboard-list"></i> Event Log</h3>
+                <div class="log-container" id="eventLog">
+                    <!-- Log entries added here -->
+                </div>
+                <button class="btn btn-export" onclick="exportLogs()">
+                    <i class="fas fa-download"></i> Export Logs for Presentation
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-left">
+            <p><i class="fas fa-user"></i> <strong>Project Lead:</strong>Ibrar_techs</p>
+            <p><i class="fas fa-phone"></i> <strong>Emergency Contact:</strong> 1122</p>
+        </div>
+        <div class="footer-center">
+            <p>This is a prototype for demonstrating emergency response coordination in Islamabad</p>
+        </div>
+        <div class="footer-right">
+            <button class="btn btn-presentation" onclick="generatePresentation()">
+                <i class="fas fa-file-powerpoint"></i> Generate Presentation
+            </button>
+        </div>
+    </footer>
+
+    <!-- Government Badge -->
+    <div class="government-badge">
+        <i class="fas fa-shield-alt"></i> 
+        OFFICIAL PROTOTYPE - ISLAMABAD SMART CITY INITIATIVE
+    </div>
+
+    <!-- Audio for alerts -->
+    <audio id="alertSound">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3" type="audio/mpeg">
+    </audio>
+
+    <script src="script.js"></script>
+</body>
+</html>
