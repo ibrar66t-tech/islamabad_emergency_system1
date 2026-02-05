@@ -177,6 +177,7 @@ main {
 .btn-notify { background: linear-gradient(135deg, #f39c12, #d35400); color: white; }
 .btn-dispatch { background: linear-gradient(135deg, #1abc9c, #16a085); color: white; }
 .btn-report { background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white; width: 100%; margin-top: 10px; }
+.btn-test { background: linear-gradient(135deg, #3498db, #2980b9); color: white; width: 100%; margin-top: 10px; }
 .btn-export { background: linear-gradient(135deg, #34495e, #2c3e50); color: white; }
 .btn-presentation { background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; }
 .btn-donate { background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; }
@@ -476,17 +477,6 @@ footer {
     border-radius: 5px;
     border-left: 3px solid #9b59b6;
     font-size: 0.9rem;
-}
-
-/* Real Data Indicators */
-.real-data-indicator {
-    display: inline-block;
-    padding: 2px 8px;
-    background: rgba(46, 204, 113, 0.3);
-    border-radius: 10px;
-    font-size: 0.7rem;
-    margin-left: 5px;
-    color: #2ecc71;
 }
 
 /* Responsive */
