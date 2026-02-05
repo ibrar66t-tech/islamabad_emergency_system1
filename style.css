@@ -96,10 +96,10 @@ header {
 /* Main Layout */
 main {
     display: grid;
-    grid-template-columns: 300px 1fr 350px;
+    grid-template-columns: 320px 1fr 350px;
     gap: 20px;
     padding: 20px;
-    height: calc(100vh - 160px);
+    height: calc(100vh - 180px);
 }
 
 @media (max-width: 1200px) {
@@ -176,8 +176,10 @@ main {
 .btn-alert { background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white; }
 .btn-notify { background: linear-gradient(135deg, #f39c12, #d35400); color: white; }
 .btn-dispatch { background: linear-gradient(135deg, #1abc9c, #16a085); color: white; }
-.btn-export { background: linear-gradient(135deg, #34495e, #2c3e50); color: white; margin-top: 15px; width: 100%; }
+.btn-report { background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white; width: 100%; margin-top: 10px; }
+.btn-export { background: linear-gradient(135deg, #34495e, #2c3e50); color: white; }
 .btn-presentation { background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; }
+.btn-donate { background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; }
 
 .alert-stats {
     background: rgba(0, 0, 0, 0.2);
@@ -187,11 +189,36 @@ main {
 }
 
 /* Weather Widget */
-#weatherData {
+.weather-widget {
     background: rgba(52, 152, 219, 0.2);
     padding: 15px;
     border-radius: 10px;
     margin-top: 10px;
+    border-left: 4px solid #3498db;
+}
+
+.traffic-widget {
+    background: rgba(46, 204, 113, 0.2);
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 10px;
+    border-left: 4px solid #2ecc71;
+}
+
+.weather-loading, .traffic-loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #a5b1c2;
+}
+
+.fa-spin {
+    animation: fa-spin 2s infinite linear;
+}
+
+@keyframes fa-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .stats-grid {
@@ -293,6 +320,39 @@ main {
 .legend-color.emergency { background: #e74c3c; }
 .legend-color.critical { background: #9b59b6; }
 
+/* Citizen Report Form */
+.citizen-report-form {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+.form-group {
+    margin-bottom: 10px;
+}
+
+.form-select, .form-input, .form-textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 0.95rem;
+}
+
+.form-textarea {
+    resize: vertical;
+}
+
+.form-note {
+    font-size: 0.8rem;
+    color: #a5b1c2;
+    margin-top: 10px;
+    text-align: center;
+}
+
 /* Agency Panel */
 .agency-list {
     display: grid;
@@ -361,6 +421,12 @@ main {
     100% { background: transparent; }
 }
 
+.export-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
 /* Footer */
 footer {
     display: flex;
@@ -380,6 +446,12 @@ footer {
     max-width: 500px;
 }
 
+.tech-info {
+    font-size: 0.8rem;
+    color: #7f8c8d;
+    margin-top: 5px;
+}
+
 /* Government Badge */
 .government-badge {
     position: fixed;
@@ -392,25 +464,11 @@ footer {
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     z-index: 1000;
     border-left: 4px solid #e74c3c;
+    max-width: 300px;
+    text-align: center;
 }
 
-/* Traffic Widget */
-.traffic-widget {
-    background: rgba(0, 0, 0, 0.2);
-    padding: 15px;
-    border-radius: 10px;
-    margin-top: 15px;
-    border-left: 4px solid #3498db;
-}
-
-.weather-widget {
-    background: rgba(0, 0, 0, 0.2);
-    padding: 15px;
-    border-radius: 10px;
-    margin-top: 15px;
-    border-left: 4px solid #f1c40f;
-}
-
+/* Citizen Reports */
 .citizen-report {
     background: rgba(155, 89, 182, 0.2);
     padding: 10px;
@@ -418,6 +476,17 @@ footer {
     border-radius: 5px;
     border-left: 3px solid #9b59b6;
     font-size: 0.9rem;
+}
+
+/* Real Data Indicators */
+.real-data-indicator {
+    display: inline-block;
+    padding: 2px 8px;
+    background: rgba(46, 204, 113, 0.3);
+    border-radius: 10px;
+    font-size: 0.7rem;
+    margin-left: 5px;
+    color: #2ecc71;
 }
 
 /* Responsive */
@@ -442,5 +511,9 @@ footer {
         position: static;
         margin: 10px;
         text-align: center;
+    }
+    
+    .export-buttons {
+        grid-template-columns: 1fr;
     }
 }
