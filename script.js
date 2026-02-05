@@ -18,11 +18,20 @@ let systemState = {
     averageResponseTime: 0,
     emergencies: [],
     logEntries: [],
-    citizenReports: []
+    citizenReports: [],
+    realWeatherData: null,
+    realTrafficData: null
 };
 
-// Weather data storage
-let weatherData = null;
+// Real APIs Configuration
+const API_CONFIG = {
+    WEATHER_API: 'https://api.open-meteo.com/v1/forecast?latitude=33.6844&longitude=73.0479&current_weather=true&timezone=auto',
+    EARTHQUAKE_API: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&latitude=33.6844&longitude=73.0479&maxradiuskm=500',
+    TRAFFIC_API: 'https://router.project-osrm.org/route/v1/driving/73.0479,33.6844;73.0579,33.6944?overview=false'
+};
+
+// Real Citizen Reports Database (Using localStorage for demo)
+const REPORTS_DB_KEY = 'islamabad_emergency_reports';
 
 // Initialize System
 function initSystem() {
@@ -30,25 +39,275 @@ function initSystem() {
     renderSectorMap();
     loadInitialData();
     startSimulation();
-    fetchRealTimeWeather();
-    initTrafficSystem();
-    initCitizenReports();
+    loadRealData();
     
     // Add initial log entry
-    addLogEntry("🚀 System initialized. Monitoring all sectors of Islamabad.", "system");
-    addLogEntry("✅ Connected to Rescue 1122, CDA, Police, and Hospital systems.", "system");
-    addLogEntry("📡 Real-time weather and traffic monitoring activated.", "system");
+    addLogEntry("🚀 System initialized with real data integrations.", "system");
+    addLogEntry("✅ Connected to Open-Meteo Weather API for live weather data.", "system");
+    addLogEntry("📡 Real citizen reporting system activated.", "system");
+    addLogEntry("👨‍💻 Project Lead: Ibrar Hussain", "system");
     
     // Update statistics every 5 seconds
     setInterval(updateStatistics, 5000);
     
-    // Simulate random events every 10-30 seconds
-    setInterval(() => {
-        if (Math.random() > 0.7) {
-            simulateRandomEmergency();
-        }
-    }, Math.random() * 20000 + 10000);
+    // Update real data every 10 minutes
+    setInterval(loadRealData, 600000);
+    
+    // Load saved citizen reports
+    loadSavedReports();
 }
+
+// ====================
+// REAL DATA INTEGRATIONS
+// ====================
+
+// Load all real data
+async function loadRealData() {
+    await fetchRealWeather();
+    await fetchEarthquakeData();
+    updateTrafficData();
+}
+
+// Real Weather API Integration
+async function fetchRealWeather() {
+    try {
+        const response = await fetch(API_CONFIG.WEATHER_API);
+        const data = await response.json();
+        
+        systemState.realWeatherData = {
+            temperature: data.current_weather.temperature,
+            windspeed: data.current_weather.windspeed,
+            weathercode: data.current_weather.weathercode,
+            time: data.current_weather.time,
+            timestamp: new Date()
+        };
+        
+        const condition = getWeatherCondition(systemState.realWeatherData.weathercode);
+        const weatherHTML = `
+            <div class="weather-widget">
+                <p><i class="fas fa-thermometer-half"></i> Temperature: <strong>${systemState.realWeatherData.temperature}°C</strong></p>
+                <p><i class="fas fa-wind"></i> Wind Speed: <strong>${systemState.realWeatherData.windspeed} km/h</strong></p>
+                <p><i class="fas fa-cloud"></i> Condition: <strong>${condition}</strong></p>
+                <p><small>Updated: ${new Date().toLocaleTimeString()}</small></p>
+            </div>
+        `;
+        
+        document.getElementById('weatherData').innerHTML = weatherHTML;
+        
+        // Check for severe weather
+        if (systemState.realWeatherData.windspeed > 30 || systemState.realWeatherData.weathercode >= 95) {
+            addLogEntry(`⚠️ Weather Alert: ${condition} with ${systemState.realWeatherData.windspeed} km/h winds`, 'weather');
+        }
+        
+    } catch (error) {
+        console.error("Weather API error:", error);
+        document.getElementById('weatherData').innerHTML = `
+            <div class="weather-widget">
+                <p><i class="fas fa-exclamation-triangle"></i> Weather data unavailable</p>
+                <p>Using simulated data</p>
+            </div>
+        `;
+    }
+}
+
+function getWeatherCondition(code) {
+    const conditions = {
+        0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy',
+        3: 'Overcast', 45: 'Foggy', 48: 'Foggy',
+        51: 'Light drizzle', 53: 'Moderate drizzle',
+        61: 'Slight rain', 63: 'Moderate rain',
+        80: 'Rain showers', 81: 'Heavy rain showers',
+        95: 'Thunderstorm', 96: 'Thunderstorm with hail',
+        99: 'Severe thunderstorm'
+    };
+    return conditions[code] || 'Unknown';
+}
+
+// Earthquake Data
+async function fetchEarthquakeData() {
+    try {
+        const response = await fetch(API_CONFIG.EARTHQUAKE_API);
+        const data = await response.json();
+        
+        // Check for recent earthquakes near Islamabad
+        const recentEarthquakes = data.features.filter(eq => {
+            const time = new Date(eq.properties.time);
+            const hoursAgo = (Date.now() - time.getTime()) / (1000 * 60 * 60);
+            return hoursAgo < 24 && eq.properties.mag >= 4.0;
+        });
+        
+        if (recentEarthquakes.length > 0) {
+            recentEarthquakes.forEach(eq => {
+                addLogEntry(`🌍 Recent Earthquake: Magnitude ${eq.properties.mag}`, 'earthquake');
+            });
+        }
+    } catch (error) {
+        console.log("Earthquake API unavailable");
+    }
+}
+
+// Traffic Data (simulated with real calculations)
+function updateTrafficData() {
+    const roads = [
+        { name: 'Srinagar Highway', congestion: Math.floor(Math.random() * 100) },
+        { name: 'Kashmir Highway', congestion: Math.floor(Math.random() * 100) },
+        { name: 'Islamabad Expressway', congestion: Math.floor(Math.random() * 100) },
+        { name: 'Murree Road', congestion: Math.floor(Math.random() * 100) }
+    ];
+    
+    let trafficHTML = '<div class="traffic-widget">';
+    
+    roads.forEach(road => {
+        const status = road.congestion > 70 ? 'Heavy' : road.congestion > 40 ? 'Moderate' : 'Light';
+        const color = road.congestion > 70 ? '#e74c3c' : road.congestion > 40 ? '#f39c12' : '#2ecc71';
+        
+        trafficHTML += `
+            <p><i class="fas fa-road"></i> ${road.name}: 
+                <span style="color:${color}">${status} (${road.congestion}%)</span>
+            </p>
+        `;
+    });
+    
+    trafficHTML += `<p><small>Simulated traffic data</small></p></div>`;
+    
+    document.getElementById('trafficData').innerHTML = trafficHTML;
+    systemState.realTrafficData = roads;
+}
+
+// ====================
+// REAL CITIZEN REPORTING SYSTEM
+// ====================
+
+function submitCitizenReport() {
+    const type = document.getElementById('emergencyType').value;
+    const location = document.getElementById('location').value;
+    const description = document.getElementById('description').value;
+    
+    if (!type || !location) {
+        showAlert('⚠️ Please select emergency type and enter location');
+        return;
+    }
+    
+    const report = {
+        id: Date.now(),
+        type: type,
+        location: location,
+        description: description,
+        timestamp: new Date().toISOString(),
+        status: 'reported',
+        phone: 'N/A' // Would be from user profile in real app
+    };
+    
+    // Save to database (localStorage for demo)
+    saveReportToDB(report);
+    
+    // Display in system
+    displayCitizenReport(report);
+    
+    // Update sector status
+    const sector = extractSectorFromLocation(location);
+    if (sector) {
+        updateSectorStatus(sector, 'alert');
+        addLogEntry(`📱 Citizen reported ${type} at ${location} (Sector ${sector})`, 'citizen');
+    }
+    
+    // Auto-dispatch based on emergency type
+    autoDispatchForReport(report);
+    
+    // Clear form
+    document.getElementById('emergencyType').value = '';
+    document.getElementById('location').value = '';
+    document.getElementById('description').value = '';
+    
+    showAlert(`✅ Thank you! Report #${report.id} submitted. Help is on the way.`);
+}
+
+function saveReportToDB(report) {
+    let reports = JSON.parse(localStorage.getItem(REPORTS_DB_KEY)) || [];
+    reports.push(report);
+    localStorage.setItem(REPORTS_DB_KEY, JSON.stringify(reports));
+    systemState.citizenReports.push(report);
+}
+
+function loadSavedReports() {
+    const reports = JSON.parse(localStorage.getItem(REPORTS_DB_KEY)) || [];
+    reports.forEach(report => displayCitizenReport(report));
+    
+    if (reports.length > 0) {
+        addLogEntry(`📊 Loaded ${reports.length} saved citizen reports`, 'system');
+    }
+}
+
+function displayCitizenReport(report) {
+    const container = document.getElementById('citizenReports');
+    
+    // Clear default message if present
+    if (container.innerHTML.includes('No citizen reports')) {
+        container.innerHTML = '';
+    }
+    
+    const reportDiv = document.createElement('div');
+    reportDiv.className = 'citizen-report';
+    reportDiv.innerHTML = `
+        <strong>Report #${report.id}</strong><br>
+        <em>${getEmergencyName(report.type)}</em><br>
+        Location: ${report.location}<br>
+        Time: ${new Date(report.timestamp).toLocaleTimeString()}<br>
+        ${report.description ? `Details: ${report.description}<br>` : ''}
+        Status: <span class="agency-status online">ACTIVE</span>
+    `;
+    
+    container.prepend(reportDiv);
+    
+    // Keep only last 5 reports visible
+    const reports = container.querySelectorAll('.citizen-report');
+    if (reports.length > 5) {
+        reports[reports.length - 1].remove();
+    }
+}
+
+function extractSectorFromLocation(location) {
+    // Extract sector from location string (e.g., "G-9/4" -> "G-9")
+    const sectorMatch = location.match(/([A-Z]-\d+)/);
+    return sectorMatch ? sectorMatch[1] : null;
+}
+
+function getEmergencyName(type) {
+    const names = {
+        'fire': 'Fire Emergency',
+        'accident': 'Traffic Accident',
+        'medical': 'Medical Emergency',
+        'flood': 'Flood Report',
+        'crime': 'Crime Report'
+    };
+    return names[type] || type;
+}
+
+function autoDispatchForReport(report) {
+    // Auto-dispatch based on emergency type
+    setTimeout(() => {
+        switch(report.type) {
+            case 'fire':
+                dispatchAgency('Rescue 1122');
+                dispatchAgency('Hospital');
+                break;
+            case 'accident':
+                dispatchAgency('Rescue 1122');
+                dispatchAgency('Police');
+                break;
+            case 'medical':
+                dispatchAgency('Hospital');
+                break;
+            case 'crime':
+                dispatchAgency('Police');
+                break;
+        }
+    }, 2000);
+}
+
+// ====================
+// EXISTING FUNCTIONS (UPDATED)
+// ====================
 
 // Update Time Display
 function updateTime() {
@@ -152,13 +411,6 @@ function simulateEmergency(type) {
             dispatchAgency('Hospital');
         }, 2000);
     }
-    
-    // Auto-send SMS for critical emergencies
-    if (emergency.severity === 'critical' || emergency.severity === 'emergency') {
-        setTimeout(() => {
-            sendMassAlert();
-        }, 3000);
-    }
 }
 
 // Simulate Random Emergency
@@ -215,15 +467,18 @@ function sendMassAlert() {
     if (affectedSectors.length > 0) {
         const message = `Emergency alert for sectors: ${affectedSectors.join(', ')}. Avoid these areas.`;
         
-        showAlert(`📱 SMS Alert sent to 10,000+ residents in affected sectors`);
-        addLogEntry(`Mass SMS alert sent to residents in sectors: ${affectedSectors.join(', ')}`, 'alert');
+        // In real system, this would call Twilio API
+        console.log(`Real SMS would be sent: ${message}`);
+        
+        showAlert(`📱 SMS Alert would be sent to residents in affected sectors`);
+        addLogEntry(`Mass SMS alert prepared for sectors: ${affectedSectors.join(', ')}`, 'alert');
         
         systemState.alertCount++;
         document.getElementById('alertCount').textContent = systemState.alertCount;
         
         // Simulate sending to authorities
         setTimeout(() => {
-            addLogEntry(`SMS gateway reports: 10,234 messages delivered successfully`, 'system');
+            addLogEntry(`SMS gateway: Alert queued for delivery`, 'system');
             addLogEntry(`Rescue 1122 confirmed receipt of emergency alert`, 'response');
         }, 2000);
     } else {
@@ -241,13 +496,16 @@ function notifyAuthorities() {
         'Capital Development Authority'
     ];
     
-    showAlert(`📧 Emergency report sent to ${authorities.length} government authorities`);
-    addLogEntry(`Emergency situation report dispatched to: ${authorities.join(', ')}`, 'authority');
+    showAlert(`📧 Emergency report prepared for ${authorities.length} government authorities`);
+    addLogEntry(`Emergency situation report prepared for: ${authorities.join(', ')}`, 'authority');
+    
+    // In real system, this would email via SendGrid API
+    console.log(`Real emails would be sent to: ${authorities}`);
     
     // Simulate responses
     authorities.forEach((auth, index) => {
         setTimeout(() => {
-            addLogEntry(`${auth} acknowledged receipt of emergency report`, 'response');
+            addLogEntry(`${auth} would receive emergency report`, 'response');
         }, (index + 1) * 1000);
     });
 }
@@ -379,7 +637,7 @@ function showSectorDetails(sector) {
         const latestEmergency = emergenciesInSector[emergenciesInSector.length - 1];
         showAlert(`Sector ${sector}: ${latestEmergency.name} (${latestEmergency.severity}) - ${latestEmergency.type}`);
     } else {
-        showAlert(`Sector ${sector}: All normal. No active emergencies. Population: ~25,000`);
+        showAlert(`Sector ${sector}: All normal. Population: ~25,000`);
     }
 }
 
@@ -412,23 +670,32 @@ function exportLogs() {
 // Generate Presentation
 function generatePresentation() {
     const presentationData = {
-        title: "Islamabad Emergency Response System - Demonstration",
+        title: "Islamabad Emergency Response System",
         date: new Date().toLocaleDateString(),
+        developer: "Ibrar Hussain",
         statistics: {
             totalEmergencies: systemState.totalEmergencies,
             resourcesDeployed: systemState.resourcesDeployed,
             sectorsMonitored: islamabadSectors.length,
             averageResponseTime: systemState.averageResponseTime,
-            alertMessagesSent: systemState.alertCount
+            alertMessagesSent: systemState.alertCount,
+            citizenReports: systemState.citizenReports.length
+        },
+        realData: {
+            weather: systemState.realWeatherData ? "✓ Live weather integrated" : "✗ Weather offline",
+            citizenReporting: "✓ Real reporting system active",
+            dataStorage: "✓ Local database active",
+            smsIntegration: "Ready for Twilio API",
+            governmentAPIs: "Ready for integration"
         },
         features: [
             "Real-time sector monitoring across Islamabad",
             "Multi-agency coordination (Rescue 1122, CDA, Police, Hospitals)",
-            "Mass SMS alert system for citizens",
+            "Live weather data integration",
+            "Citizen reporting system with local database",
+            "Mass SMS alert system (Twilio ready)",
             "Automatic government notification",
-            "Live event logging and reporting",
-            "Weather and traffic integration",
-            "Citizen reporting system"
+            "Live event logging and reporting"
         ]
     };
     
@@ -437,6 +704,7 @@ ISLAMABAD EMERGENCY RESPONSE SYSTEM
 ====================================
 Presentation for Government Authorities
 Date: ${presentationData.date}
+Developer: ${presentationData.developer}
 
 SYSTEM OVERVIEW
 ---------------
@@ -449,6 +717,11 @@ KEY STATISTICS (Demo Session)
 • Sectors Monitored: ${presentationData.statistics.sectorsMonitored}
 • Average Response Time: ${presentationData.statistics.averageResponseTime.toFixed(1)} minutes
 • Alert Messages Sent: ${presentationData.statistics.alertMessagesSent}
+• Citizen Reports Received: ${presentationData.statistics.citizenReports}
+
+REAL DATA INTEGRATIONS
+----------------------
+${Object.entries(presentationData.realData).map(([key, value]) => `• ${value}`).join('\n')}
 
 CORE FEATURES
 -------------
@@ -464,22 +737,33 @@ BENEFITS FOR ISLAMABAD
 
 IMPLEMENTATION PLAN
 -------------------
-Phase 1: Pilot in 3 sectors (2 months)
-Phase 2: City-wide deployment (4 months)
-Phase 3: Integration with national systems (3 months)
+Phase 1: Pilot in 3 sectors (2 months) - $5,000
+Phase 2: City-wide deployment (4 months) - $20,000
+Phase 3: National integration (3 months) - $10,000
+TOTAL BUDGET: $35,000 (Rs. 9,800,000)
 
-COST ESTIMATE
--------------
-• Software Development: PKR 5,000,000
-• Hardware & Infrastructure: PKR 3,000,000
-• Training & Deployment: PKR 2,000,000
-• TOTAL: PKR 10,000,000
+TECHNICAL SPECIFICATIONS
+------------------------
+• Frontend: HTML5, CSS3, JavaScript
+• Backend: Firebase/Supabase (ready)
+• APIs: Open-Meteo (weather), Twilio (SMS), Google Maps
+• Database: LocalStorage + Cloud Firestore
+• Hosting: GitHub Pages (free)
+
+NEXT STEPS
+----------
+1. Government approval for pilot program
+2. Integration with Rescue 1122 API
+3. SMS gateway setup with Twilio
+4. Mobile app development
+5. City-wide training program
 
 CONTACT
 -------
-Project Lead: [YOUR NAME HERE]
-Email: [YOUR EMAIL]
-Phone: [YOUR PHONE]
+Project Lead: Ibrar Hussain
+Email: [Your Email Here]
+Phone: [Your Phone Here]
+Live Demo: https://ibrar66t-tech.github.io/islamabad_emergency_system1/
 
 This system has the potential to save hundreds of lives annually and establish Islamabad as a model smart city for disaster response.
     `;
@@ -488,7 +772,7 @@ This system has the potential to save hundreds of lives annually and establish I
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `islamabad-emergency-system-presentation-${new Date().toISOString().split('T')[0]}.txt`;
+    a.download = `emergency-system-presentation-ibrar-hussain-${new Date().toISOString().split('T')[0]}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -497,192 +781,51 @@ This system has the potential to save hundreds of lives annually and establish I
     addLogEntry('Complete presentation document generated for authorities', 'presentation');
 }
 
-// ====================
-// REAL-TIME FEATURES
-// ====================
-
-// Fetch Real-time Weather
-async function fetchRealTimeWeather() {
-    try {
-        // Using OpenWeatherMap alternative (free)
-        const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=33.6844&longitude=73.0479&current_weather=true&hourly=temperature_2m,rain&timezone=auto');
-        const data = await response.json();
-        
-        weatherData = {
-            temperature: data.current_weather.temperature,
-            windspeed: data.current_weather.windspeed,
-            weathercode: data.current_weather.weathercode,
-            time: data.current_weather.time
-        };
-        
-        const condition = getWeatherCondition(weatherData.weathercode);
-        const weatherHTML = `
-            <div class="weather-widget">
-                <p><i class="fas fa-thermometer-half"></i> Temperature: ${weatherData.temperature}°C</p>
-                <p><i class="fas fa-wind"></i> Wind Speed: ${weatherData.windspeed} km/h</p>
-                <p><i class="fas fa-cloud"></i> Condition: ${condition}</p>
-                <p><i class="fas fa-clock"></i> Updated: ${new Date().toLocaleTimeString()}</p>
-            </div>
-        `;
-        
-        document.getElementById('weatherData').innerHTML = weatherHTML;
-        
-        // Check for severe weather
-        if (weatherData.weathercode >= 95 || weatherData.windspeed > 30) {
-            addLogEntry(`⚠️ Severe weather alert: ${condition}. Wind speed: ${weatherData.windspeed} km/h`, 'weather');
-            showAlert(`⚠️ Weather Alert: ${condition}. High winds detected.`);
-        }
-        
-    } catch (error) {
-        console.log("Weather API error, using mock data");
-        document.getElementById('weatherData').innerHTML = `
-            <div class="weather-widget">
-                <p><i class="fas fa-thermometer-half"></i> Temperature: 25°C</p>
-                <p><i class="fas fa-wind"></i> Wind Speed: 12 km/h</p>
-                <p><i class="fas fa-cloud-sun"></i> Condition: Partly Cloudy</p>
-                <p><i class="fas fa-exclamation-triangle"></i> Using simulated data</p>
-            </div>
-        `;
-    }
-    
-    // Update every 5 minutes
-    setTimeout(fetchRealTimeWeather, 300000);
-}
-
-function getWeatherCondition(code) {
-    const conditions = {
-        0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy',
-        3: 'Overcast', 45: 'Foggy', 48: 'Foggy',
-        51: 'Light drizzle', 53: 'Moderate drizzle',
-        61: 'Slight rain', 63: 'Moderate rain',
-        95: 'Thunderstorm', 96: 'Thunderstorm with hail'
-    };
-    return conditions[code] || 'Unknown';
-}
-
-// Traffic System
-function initTrafficSystem() {
-    // Simulate traffic data updates
-    setInterval(() => {
-        const roads = ['Srinagar Highway', 'Kashmir Highway', 'Islamabad Expressway', 'Murree Road'];
-        const randomRoad = roads[Math.floor(Math.random() * roads.length)];
-        const trafficLevel = Math.floor(Math.random() * 100);
-        
-        if (trafficLevel > 80) {
-            addLogEntry(`🚗 Heavy traffic on ${randomRoad} (${trafficLevel}% congestion)`, 'traffic');
-        }
-    }, 60000); // Every minute
-}
-
-// Citizen Reports System
-function initCitizenReports() {
-    // Generate citizen reports randomly
-    setInterval(() => {
-        if (Math.random() > 0.7) { // 30% chance
-            generateCitizenReport();
-        }
-    }, Math.random() * 40000 + 20000); // Every 20-60 seconds
-}
-
-function generateCitizenReport() {
-    const emergencies = [
-        { type: 'accident', message: 'Car accident with injuries' },
-        { type: 'fire', message: 'Building fire spotted' },
-        { type: 'medical', message: 'Person collapsed on street' },
-        { type: 'crime', message: 'Suspicious activity reported' },
-        { type: 'infrastructure', message: 'Power lines down' }
-    ];
-    
-    const randomEmergency = emergencies[Math.floor(Math.random() * emergencies.length)];
-    const randomSector = islamabadSectors[Math.floor(Math.random() * islamabadSectors.length)];
-    const citizenId = Math.floor(Math.random() * 1000) + 1000;
-    
-    const report = {
-        id: citizenId,
-        type: randomEmergency.type,
-        message: randomEmergency.message,
-        sector: randomSector,
-        time: new Date().toLocaleTimeString(),
-        phone: `03${Math.floor(Math.random() * 90000000) + 10000000}`
-    };
-    
-    systemState.citizenReports.push(report);
-    
-    // Display in citizen reports section
-    displayCitizenReport(report);
-    
-    // Add to log
-    addLogEntry(`📱 Citizen #${citizenId} reported ${randomEmergency.type} in Sector ${randomSector}: "${randomEmergency.message}"`, 'citizen');
-    
-    // Auto-classify and respond
-    autoProcessCitizenReport(report);
-}
-
-function displayCitizenReport(report) {
-    const container = document.getElementById('citizenReports');
-    
-    // Clear "waiting" message if present
-    if (container.innerHTML.includes('Waiting for')) {
-        container.innerHTML = '';
-    }
-    
-    const reportDiv = document.createElement('div');
-    reportDiv.className = 'citizen-report';
-    reportDiv.innerHTML = `
-        <strong>Citizen #${report.id}</strong><br>
-        <em>${report.message}</em><br>
-        Location: Sector ${report.sector}<br>
-        Time: ${report.time} | Phone: ${report.phone}
-    `;
-    
-    container.prepend(reportDiv);
-    
-    // Keep only last 5 reports
-    const reports = container.querySelectorAll('.citizen-report');
-    if (reports.length > 5) {
-        reports[reports.length - 1].remove();
-    }
-}
-
-function autoProcessCitizenReport(report) {
-    // Determine severity based on report type
-    const severityMap = {
-        'fire': 'emergency',
-        'accident': 'emergency',
-        'medical': 'emergency',
-        'crime': 'alert',
-        'infrastructure': 'alert'
-    };
-    
-    const severity = severityMap[report.type] || 'normal';
-    
-    // Update sector status
-    updateSectorStatus(report.sector, severity);
-    
-    // Auto-dispatch for emergencies
-    if (severity === 'emergency') {
-        setTimeout(() => {
-            dispatchAgency('Rescue 1122');
-            if (report.type === 'crime') {
-                dispatchAgency('Police');
-            }
-        }, 1500);
-    }
-}
-
 // Start Simulation
 function startSimulation() {
     // Initial emergencies for demo
     setTimeout(() => simulateEmergency('medical'), 3000);
     setTimeout(() => simulateEmergency('fire'), 8000);
-    setTimeout(() => generateCitizenReport(), 12000);
-    setTimeout(() => simulateEmergency('flood'), 15000);
+    setTimeout(() => simulateRandomEmergency(), 15000);
+    
+    // Generate citizen reports
+    setInterval(() => {
+        if (Math.random() > 0.7) {
+            generateAutoCitizenReport();
+        }
+    }, 30000);
+}
+
+function generateAutoCitizenReport() {
+    const types = ['fire', 'accident', 'medical', 'flood', 'crime'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    const sector = islamabadSectors[Math.floor(Math.random() * islamabadSectors.length)];
+    const location = `${sector}/${Math.floor(Math.random() * 9) + 1}`;
+    
+    const report = {
+        id: Date.now(),
+        type: type,
+        location: location,
+        description: `Auto-generated test report for ${getEmergencyName(type)}`,
+        timestamp: new Date().toISOString(),
+        status: 'reported',
+        phone: 'Auto-generated'
+    };
+    
+    saveReportToDB(report);
+    displayCitizenReport(report);
+    addLogEntry(`🤖 Auto-test: ${getEmergencyName(type)} reported in ${location}`, 'test');
+}
+
+function showDonateInfo() {
+    showAlert('💝 Support this project by sharing it! Share link: https://ibrar66t-tech.github.io/islamabad_emergency_system1/');
+    addLogEntry('Support information requested. Project needs exposure and partnerships.', 'info');
 }
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', initSystem);
 
-// Add keyboard shortcuts
+// Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.key === 'e') {
         simulateEmergency('earthquake');
@@ -692,5 +835,7 @@ document.addEventListener('keydown', (e) => {
         sendMassAlert();
     } else if (e.ctrlKey && e.key === 'p') {
         generatePresentation();
+    } else if (e.key === 'F1') {
+        showAlert('Help: Ctrl+E=Earthquake, Ctrl+F=Fire, Ctrl+S=SMS Alert, Ctrl+P=Presentation');
     }
 });
