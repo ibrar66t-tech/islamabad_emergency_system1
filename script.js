@@ -780,8 +780,8 @@ NEXT STEPS
 CONTACT
 -------
 Project Lead: Ibrar Hussain
-Email: [Your Email Here]
-Phone: [Your Phone Here]
+Email: ibrar.66t@gmail.com
+Phone: +923258552701
 Live Demo: https://ibrar66t-tech.github.io/islamabad_emergency_system1/
 
 This system has the potential to save hundreds of lives annually and establish Islamabad as a model smart city for disaster response.
@@ -832,3 +832,4 @@ document.addEventListener('keydown', (e) => {
         showAlert('Help: Ctrl+E=Earthquake, Ctrl+F=Fire, Ctrl+S=SMS Alert, Ctrl+P=Presentation');
     }
 });
+
